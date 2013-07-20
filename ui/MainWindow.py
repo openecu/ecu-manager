@@ -3,6 +3,7 @@ from PyQt4 import uic
 
 from ui.dialogs.SettingsDialog import SettingsDialog
 from ui.dialogs.AboutDialog import AboutDialog
+from ui.widgets.TableViewWidget import TableViewWidget
 
 class MainWindow(QtGui.QMainWindow):
 
@@ -13,11 +14,16 @@ class MainWindow(QtGui.QMainWindow):
 		self.ui.actionExit.triggered.connect(QtCore.QCoreApplication.instance().quit)
 		self.ui.actionSettings.triggered.connect(self.settings_dialog)
 		self.ui.actionAbout.triggered.connect(self.about_dialog)
+		self.ui.tableViewButton.clicked.connect(self.table_view_dialog)
 
 	def settings_dialog(self):
 		settingsDialog = SettingsDialog()
 		settingsDialog.exec_()
 
 	def about_dialog(self):
-		aboutDialog = AboutDialog()
+		aboutDialog = AboutDialog(self)
 		aboutDialog.exec_()
+
+	def table_view_dialog(self):
+		tableViewWidget = TableViewWidget()
+		tableViewWidget.show()
