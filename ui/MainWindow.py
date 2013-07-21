@@ -4,6 +4,9 @@ from PyQt4 import uic
 from ui.dialogs.SettingsDialog import SettingsDialog
 from ui.dialogs.AboutDialog import AboutDialog
 from ui.widgets.TableViewWidget import TableViewWidget
+from ui.widgets.SurfaceViewWidget import SurfaceViewWidget
+
+from core.com.Connection import Connection
 
 class MainWindow(QtGui.QMainWindow):
 
@@ -15,6 +18,7 @@ class MainWindow(QtGui.QMainWindow):
 		self.ui.actionSettings.triggered.connect(self.settings_dialog)
 		self.ui.actionAbout.triggered.connect(self.about_dialog)
 		self.ui.tableViewButton.clicked.connect(self.table_view_dialog)
+		self.ui.connectButton.clicked.connect(self.connect)
 
 	def settings_dialog(self):
 		settingsDialog = SettingsDialog()
@@ -27,3 +31,11 @@ class MainWindow(QtGui.QMainWindow):
 	def table_view_dialog(self):
 		tableViewWidget = TableViewWidget()
 		tableViewWidget.show()
+
+	def connect(self):
+		conn = Connection('COM4', 9600)
+		conn.connect()
+		conn.dataReceived.connect(self.update_sensors)
+
+	def update_sensors(self, data):
+		print(data)

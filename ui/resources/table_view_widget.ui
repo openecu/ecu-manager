@@ -13,7 +13,7 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <widget class="QTableWidget" name="tableWidget">
+  <widget class="CustomTableWidget" name="tableWidget">
    <property name="geometry">
     <rect>
      <x>10</x>
@@ -29,6 +29,9 @@
    </property>
    <property name="contextMenuPolicy">
     <enum>Qt::CustomContextMenu</enum>
+   </property>
+   <property name="editTriggers">
+    <set>QAbstractItemView::DoubleClicked|QAbstractItemView::EditKeyPressed</set>
    </property>
    <property name="selectionMode">
     <enum>QAbstractItemView::ContiguousSelection</enum>
@@ -95,6 +98,13 @@
    </property>
   </widget>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>CustomTableWidget</class>
+   <extends>QTableWidget</extends>
+   <header>ui.widgets.CustomTableWidget</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

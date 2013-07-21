@@ -2,7 +2,7 @@ import numpy
 from scipy import ndimage
 from scipy.interpolate import interp1d, interp2d
 
-from PyQt4 import QtGui
+from PyQt4 import QtCore, QtGui
 from PyQt4 import uic
 
 class TableViewWidget(QtGui.QWidget):
@@ -29,8 +29,9 @@ class TableViewWidget(QtGui.QWidget):
             for j in range(self.ui.tableWidget.rowCount()):
                 self.ui.tableWidget.setItem(i, j, QtGui.QTableWidgetItem())
 
-        self.ui.tableWidget.cellChanged.connect(self.cell_edit)
+        self.ui.tableWidget.cellChanged.connect(self.cell_changed)
         self.ui.tableWidget.customContextMenuRequested.connect(self.cell_context_menu)
+        self.ui.tableWidget.keyPressed.connect(self.key_pressed)
         self.ui.interpButton.clicked.connect(self.interp_data)
         self.ui.filterButton.clicked.connect(self.filter_data)
         self.ui.clearButton.clicked.connect(self.clear_data)
@@ -39,6 +40,25 @@ class TableViewWidget(QtGui.QWidget):
         """Initialize data array"""
 
         self.data = [[0 for i in range(16)] for j in range(16)]
+
+    def update(self):
+        """Update table values"""
+
+        QtGui.QWidget.update(self)
+
+        for i in range(self.ui.tableWidget.rowCount()):
+            for j in range(self.ui.tableWidget.columnCount()):
+                self.ui.tableWidget.item(i, j).setText('%.2f' % self.data[i][j])
+                # colorize cell
+                g = int(255 - self.data[i][j] / 1 * 96)
+
+                if g < 0:
+                    g = 0
+                elif g > 255:
+                    g = 255
+
+                color = QtGui.QColor(255, g, 128)
+                self.ui.tableWidget.item(i, j).setBackground(color)
 
     def interp_data(self):
         """Interpolate selected data"""
@@ -71,7 +91,6 @@ class TableViewWidget(QtGui.QWidget):
                 z = z.tolist()
 
             self.modify_selected(sel, z)
-            self.update()        
 
     def filter_data(self):
         """Filter selected data"""
@@ -86,47 +105,7 @@ class TableViewWidget(QtGui.QWidget):
             sel = self.ui.tableWidget.selectedRanges()[0]
             self.modify_selected(sel, 0)
 
-        self.update()     
-
-    def update(self):
-        """Update table values"""
-
-        QtGui.QWidget.update(self)
-
-        for i in range(self.ui.tableWidget.rowCount()):
-            for j in range(self.ui.tableWidget.columnCount()):
-                self.ui.tableWidget.item(i, j).setText('%.2f' % self.data[i][j])
-                # colorize cell
-                color = QtGui.QColor(255, 0, 128)
-                color.setGreen(int(255 - self.data[i][j] / 1 * 96))
-                self.ui.tableWidget.item(i, j).setBackground(color)
-
-    def cell_edit(self, x, y):
-        """Cell edit callback"""
-
-        try:
-            value = float(self.ui.tableWidget.item(x, y).text())
-        except ValueError:
-            value = 0
-
-        self.data[x][y] = value
-        self.ui.tableWidget.item(x, y).setText('%.2f' % value)
-
-    def cell_edit_dialog(self):
-        """Cell edit dialog"""
-
-        value, ok = QtGui.QInputDialog.getDouble(self, 'Enter Value', '', 0, -65535, 65535, 2)
-
-        if not ok:
-            return 
-
-        if len(self.ui.tableWidget.selectedRanges()) > 0:
-            sel = self.ui.tableWidget.selectedRanges()[0]
-            self.modify_selected(sel, value)
-
-        self.update()
-
-    def modify_selected(self, selection, value):
+    def modify_selected(self, selection, value, method='set'):
         """Modify selected cells"""
 
         x = selection.leftColumn();
@@ -142,7 +121,39 @@ class TableViewWidget(QtGui.QWidget):
         else:
             for i in range(y, _y + 1):
                 for j in range(x, _x + 1):
-                    self.data[i][j] = value
+                    if method == 'set':
+                        self.data[i][j] = value
+                    elif method == 'inc':
+                        self.data[i][j] += value
+                    elif method == 'dec':
+                        self.data[i][j] -= value
+            
+        self.update()        
+
+    def cell_edit_dialog(self):
+        """Cell edit dialog"""
+
+        value, ok = QtGui.QInputDialog.getDouble(self, 'Enter Value', '', 0, -65535, 65535, 2)
+
+        if not ok:
+            return 
+
+        if len(self.ui.tableWidget.selectedRanges()) > 0:
+            sel = self.ui.tableWidget.selectedRanges()[0]
+            self.modify_selected(sel, value)
+
+    def cell_changed(self, row, column):
+        """Cell changed slot"""
+
+        cell = self.ui.tableWidget.item(row, column)
+
+        try:
+            value = float(cell.text())
+        except ValueError:
+            value = 0
+
+        self.data[row][column] = value
+        cell.setText('%.2f' % value)
 
     def cell_context_menu(self, pos):
         """Cell context menu"""
@@ -153,3 +164,14 @@ class TableViewWidget(QtGui.QWidget):
         menu.addAction('Interpolate').triggered.connect(self.interp_data)
         menu.addAction('Filter').triggered.connect(self.filter_data)
         menu.exec_(self.ui.tableWidget.mapToGlobal(pos))
+
+    def key_pressed(self, event):
+        if len(self.ui.tableWidget.selectedRanges()) > 0:
+            sel = self.ui.tableWidget.selectedRanges()[0]
+            key = event.key()
+
+            if key == QtCore.Qt.Key_Plus:
+                self.modify_selected(sel, 0.01, method='inc')
+
+            elif key == QtCore.Qt.Key_Minus:
+                self.modify_selected(sel, 0.01, method='dec')
