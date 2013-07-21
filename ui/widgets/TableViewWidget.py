@@ -1,3 +1,4 @@
+import numpy
 from scipy import ndimage
 from scipy.interpolate import interp1d, interp2d
 
@@ -45,8 +46,11 @@ class TableViewWidget(QtGui.QWidget):
         if len(self.ui.tableWidget.selectedRanges()) > 0:
             sel = self.ui.tableWidget.selectedRanges()[0]
 
-            rc = sel.rowCount()
-            cc = sel.columnCount()
+            row_count = sel.rowCount()
+            column_count = sel.columnCount()
+
+            if row_count == 1 and column_count == 1:
+                return
 
             x = sel.leftColumn();
             _x = sel.rightColumn()
@@ -54,23 +58,20 @@ class TableViewWidget(QtGui.QWidget):
             _y = sel.bottomRow()
             z = [[self.data[y][x], self.data[y][_x]], [self.data[_y][x], self.data[_y][_x]]]
 
-            if rc == 1 and cc > 1:
+            if row_count == 1 and column_count > 1:
                 z = interp1d([x, _x], z[0])(range(x, _x + 1))
-                for i in range(0, cc):
-                    self.data[y][x + i] = z[i]
+                z = [z.tolist()]
 
-            elif cc == 1 and rc > 1:
+            elif column_count == 1 and row_count > 1:
                 z = interp1d([y, _y], [z[0][0], z[1][0]])(range(y, _y + 1))
-                for i in range(0, rc):
-                    self.data[y + i][x] = z[i]
+                z = numpy.array([z]).T.tolist()
 
-            elif rc > 1 and cc > 1:
+            else:
                 z = interp2d([x, _x], [y, _y], z)(range(x, _x + 1), range(y, _y + 1))
-                for i in range(0, cc):
-                    for j in range(0, rc):
-                        self.data[y + j][x + i] = z[j][i]
+                z = z.tolist()
 
-        self.update()        
+            self.modify_selected(sel, z)
+            self.update()        
 
     def filter_data(self):
         """Filter selected data"""
@@ -83,15 +84,7 @@ class TableViewWidget(QtGui.QWidget):
 
         if len(self.ui.tableWidget.selectedRanges()) > 0:
             sel = self.ui.tableWidget.selectedRanges()[0]
-
-            x = sel.leftColumn();
-            _x = sel.rightColumn()
-            y = sel.topRow()
-            _y = sel.bottomRow()
-
-            for i in range(y, _y + 1):
-                for j in range(x, _x + 1):
-                    self.data[i][j] = 0
+            self.modify_selected(sel, 0)
 
         self.update()     
 
@@ -129,17 +122,27 @@ class TableViewWidget(QtGui.QWidget):
 
         if len(self.ui.tableWidget.selectedRanges()) > 0:
             sel = self.ui.tableWidget.selectedRanges()[0]
+            self.modify_selected(sel, value)
 
-            x = sel.leftColumn();
-            _x = sel.rightColumn()
-            y = sel.topRow()
-            _y = sel.bottomRow()
+        self.update()
 
+    def modify_selected(self, selection, value):
+        """Modify selected cells"""
+
+        x = selection.leftColumn();
+        _x = selection.rightColumn()
+        y = selection.topRow()
+        _y = selection.bottomRow()
+
+        if isinstance(value, (list, tuple)):
+            for i in range(y, _y + 1):
+                for j in range(x, _x + 1):
+                    self.data[i][j] = value[i - y][j - x]
+
+        else:
             for i in range(y, _y + 1):
                 for j in range(x, _x + 1):
                     self.data[i][j] = value
-
-        self.update()
 
     def cell_context_menu(self, pos):
         """Cell context menu"""
