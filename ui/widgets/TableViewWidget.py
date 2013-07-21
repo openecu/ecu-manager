@@ -1,4 +1,4 @@
-import numpy
+from scipy import ndimage
 from scipy.interpolate import interp1d, interp2d
 
 from PyQt4 import QtGui
@@ -24,7 +24,12 @@ class TableViewWidget(QtGui.QWidget):
         self.ui.tableWidget.horizontalHeader().setResizeMode(QtGui.QHeaderView.Fixed)
         self.ui.tableWidget.verticalHeader().setResizeMode(QtGui.QHeaderView.Fixed)
 
+        for i in range(self.ui.tableWidget.columnCount()):
+            for j in range(self.ui.tableWidget.rowCount()):
+                self.ui.tableWidget.setItem(i, j, QtGui.QTableWidgetItem())
+
         self.ui.tableWidget.cellChanged.connect(self.cell_edit)
+        self.ui.tableWidget.customContextMenuRequested.connect(self.cell_context_menu)
         self.ui.interpButton.clicked.connect(self.interp_data)
         self.ui.filterButton.clicked.connect(self.filter_data)
         self.ui.clearButton.clicked.connect(self.clear_data)
@@ -69,14 +74,24 @@ class TableViewWidget(QtGui.QWidget):
 
     def filter_data(self):
         """Filter selected data"""
-        pass
+
+        self.data = ndimage.gaussian_filter(self.data, 0.5)
+        self.update()
 
     def clear_data(self):
         """Clear all data"""
 
-        for i in range(16):
-            for j in range(16):
-                self.data[j][i] = 0   
+        if len(self.ui.tableWidget.selectedRanges()) > 0:
+            sel = self.ui.tableWidget.selectedRanges()[0]
+
+            x = sel.leftColumn();
+            _x = sel.rightColumn()
+            y = sel.topRow()
+            _y = sel.bottomRow()
+
+            for i in range(y, _y + 1):
+                for j in range(x, _x + 1):
+                    self.data[i][j] = 0
 
         self.update()     
 
@@ -85,11 +100,13 @@ class TableViewWidget(QtGui.QWidget):
 
         QtGui.QWidget.update(self)
 
-        for i in range(16):
-            for j in range(16):
-                self.ui.tableWidget.setItem(i, j, QtGui.QTableWidgetItem('%.2f' % self.data[i][j]))
-                g = int(255 - self.data[i][j] / 1 * 96)
-                self.ui.tableWidget.item(i, j).setBackground(QtGui.QColor(255, g, 128))
+        for i in range(self.ui.tableWidget.rowCount()):
+            for j in range(self.ui.tableWidget.columnCount()):
+                self.ui.tableWidget.item(i, j).setText('%.2f' % self.data[i][j])
+                # colorize cell
+                color = QtGui.QColor(255, 0, 128)
+                color.setGreen(int(255 - self.data[i][j] / 1 * 96))
+                self.ui.tableWidget.item(i, j).setBackground(color)
 
     def cell_edit(self, x, y):
         """Cell edit callback"""
@@ -101,3 +118,35 @@ class TableViewWidget(QtGui.QWidget):
 
         self.data[x][y] = value
         self.ui.tableWidget.item(x, y).setText('%.2f' % value)
+
+    def cell_edit_dialog(self):
+        """Cell edit dialog"""
+
+        value, ok = QtGui.QInputDialog.getDouble(self, 'Enter Value', '', 0, -65535, 65535, 2)
+
+        if not ok:
+            return 
+
+        if len(self.ui.tableWidget.selectedRanges()) > 0:
+            sel = self.ui.tableWidget.selectedRanges()[0]
+
+            x = sel.leftColumn();
+            _x = sel.rightColumn()
+            y = sel.topRow()
+            _y = sel.bottomRow()
+
+            for i in range(y, _y + 1):
+                for j in range(x, _x + 1):
+                    self.data[i][j] = value
+
+        self.update()
+
+    def cell_context_menu(self, pos):
+        """Cell context menu"""
+
+        menu = QtGui.QMenu('Actions', self.ui.tableWidget)
+        menu.addAction('Edit').triggered.connect(self.cell_edit_dialog)
+        menu.addAction('Clear').triggered.connect(self.clear_data)
+        menu.addAction('Interpolate').triggered.connect(self.interp_data)
+        menu.addAction('Filter').triggered.connect(self.filter_data)
+        menu.exec_(self.ui.tableWidget.mapToGlobal(pos))
