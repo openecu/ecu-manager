@@ -38,19 +38,55 @@ class WriteThread(threading.Thread):
         """Thread loop"""
         pass
 
+class Packet(object):
+
+    size = 0
+    data = list()
+
+    def __init__(self, data):
+        self.data = data
+
+class Protocol(object):
+
+    WAIT = 0
+    READ_SIZE = 2
+    READ_DATA = 3
+
+    def __init__(self):
+        self.state = Protocol.WAIT
+
+    def parse_data(self, data):
+        for b in data:
+            if self.state == Protocol.WAIT:
+                if b == 0xFF:
+                    self.state = Protocol.READ_SIZE
+                    self.packet = Packet()
+            elif self.state == Protocol.READ_SIZE:
+                pass
+            elif self.state == Protocol.READ_DATA:
+                pass
+
+    def is_ready(self):
+        pass
+
+    def get_packet(self):
+        pass
+
 class Connection(QtCore.QObject):
     """
     Connection
     """
 
-    dataReceived = QtCore.pyqtSignal(bytes)
+    packetReceived = QtCore.pyqtSignal(object)
     connected = False
 
-    def __init__(self, port_name, baud_rate=9600):
+    def __init__(self, port_name, baud_rate, proto):
         QtCore.QObject.__init__(self)
 
         self.port_name = port_name
         self.baud_rate = baud_rate
+        self.proto = proto
+
         self.serial = Serial()
         ReadThread(self.serial, self.dataReceivedEvent).start()
 
@@ -80,4 +116,7 @@ class Connection(QtCore.QObject):
         return self.connected
 
     def dataReceivedEvent(self, data):
-        self.dataReceived.emit(data)
+        self.proto.parse_data(data)
+
+        if self.proto.is_ready():
+            self.packetReceived.emit(self.proto.get_packet())
