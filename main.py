@@ -1,10 +1,16 @@
 import sys
-from PyQt4 import QtGui
+
+from PyQt4.QtCore import QSettings
 
 from ui.MainWindow import MainWindow
+from app.App import App
 
 def main():
-    app = QtGui.QApplication(sys.argv)
+    """Entry point function"""
+
+    app = App(sys.argv)
+    app.setApplicationName('ECU Manager')
+    app.setSettings(QSettings('Community', 'ECU Manager'))
 
     window = MainWindow()
     window.show()
@@ -12,4 +18,4 @@ def main():
     sys.exit(app.exec_())
 
 if __name__ == '__main__':
-	main()
+    main()

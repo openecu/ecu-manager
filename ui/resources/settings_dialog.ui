@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>538</width>
+    <width>528</width>
     <height>372</height>
    </rect>
   </property>
@@ -50,106 +50,87 @@
            <property name="title">
             <string>COM Port</string>
            </property>
-           <widget class="QLabel" name="portNameLabel">
+           <widget class="QWidget" name="formLayoutWidget">
             <property name="geometry">
              <rect>
               <x>10</x>
               <y>20</y>
-              <width>54</width>
-              <height>13</height>
+              <width>141</width>
+              <height>106</height>
              </rect>
             </property>
-            <property name="text">
-             <string>Port Name:</string>
-            </property>
-           </widget>
-           <widget class="QComboBox" name="portNameComboBox">
-            <property name="geometry">
-             <rect>
-              <x>10</x>
-              <y>40</y>
-              <width>69</width>
-              <height>22</height>
-             </rect>
-            </property>
-            <property name="editable">
-             <bool>true</bool>
-            </property>
-           </widget>
-           <widget class="QLabel" name="baudRateLabel">
-            <property name="geometry">
-             <rect>
-              <x>10</x>
-              <y>70</y>
-              <width>54</width>
-              <height>13</height>
-             </rect>
-            </property>
-            <property name="text">
-             <string>Baud Rate:</string>
-            </property>
-           </widget>
-           <widget class="QComboBox" name="baudRateComboBox">
-            <property name="geometry">
-             <rect>
-              <x>10</x>
-              <y>90</y>
-              <width>69</width>
-              <height>22</height>
-             </rect>
-            </property>
-            <item>
-             <property name="text">
-              <string>9600</string>
+            <layout class="QFormLayout" name="formLayout">
+             <property name="fieldGrowthPolicy">
+              <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
              </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>19200</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>38400</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>57600</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>115200</string>
-             </property>
-            </item>
+             <item row="0" column="0">
+              <widget class="QLabel" name="portNameLabel">
+               <property name="text">
+                <string>Port Name:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QComboBox" name="portNameComboBox">
+               <property name="editable">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QLabel" name="baudRateLabel">
+               <property name="text">
+                <string>Baud Rate:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QComboBox" name="baudRateComboBox">
+               <item>
+                <property name="text">
+                 <string>9600</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>19200</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>38400</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>57600</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>115200</string>
+                </property>
+               </item>
+              </widget>
+             </item>
+             <item row="3" column="1">
+              <widget class="QPushButton" name="testButton">
+               <property name="text">
+                <string>Test</string>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QPushButton" name="updateButton">
+               <property name="text">
+                <string>Update</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </widget>
-           <widget class="QPushButton" name="testButton">
-            <property name="geometry">
-             <rect>
-              <x>10</x>
-              <y>120</y>
-              <width>71</width>
-              <height>23</height>
-             </rect>
-            </property>
-            <property name="text">
-             <string>Test</string>
-            </property>
-           </widget>
-           <widget class="QPushButton" name="updateButton">
-            <property name="geometry">
-             <rect>
-              <x>90</x>
-              <y>40</y>
-              <width>71</width>
-              <height>23</height>
-             </rect>
-            </property>
-            <property name="text">
-             <string>Update</string>
-            </property>
-           </widget>
+           <zorder>horizontalSpacer</zorder>
+           <zorder>formLayoutWidget</zorder>
           </widget>
          </item>
         </layout>

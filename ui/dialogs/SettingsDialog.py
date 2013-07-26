@@ -1,49 +1,51 @@
 from serial import Serial, SerialException
 from serial.tools import list_ports
 
-from PyQt4 import QtCore, QtGui
+from PyQt4.QtGui import QDialog, QDialogButtonBox, QMessageBox
 from PyQt4 import uic
 
-from settings import settings
+from app.App import App
 
-class SettingsDialog(QtGui.QDialog):
+class SettingsDialog(QDialog):
     """
     Application settings dialog
     """
 
     def __init__(self):
-        QtGui.QDialog.__init__(self)
+        QDialog.__init__(self)
 
+        self.app = App.instance()
+        self.settings = self.app.settings()
         self.initUi()
 
-        self.update_ports()
-        self.load_settings()
+        self.updatePorts()
+        self.loadSettings()
 
     def initUi(self):
         self.ui = uic.loadUi('ui/resources/settings_dialog.ui', self)
 
-        self.ui.buttonBox.button(QtGui.QDialogButtonBox.Ok).clicked.connect(self.save_settings)
-        self.ui.buttonBox.button(QtGui.QDialogButtonBox.Cancel).clicked.connect(self.close)        
-        self.ui.updateButton.clicked.connect(self.update_ports)
-        self.ui.testButton.clicked.connect(self.test_connection)
+        self.ui.buttonBox.button(QDialogButtonBox.Ok).clicked.connect(self.saveSettings)
+        self.ui.buttonBox.button(QDialogButtonBox.Cancel).clicked.connect(self.close)        
+        self.ui.updateButton.clicked.connect(self.updatePorts)
+        self.ui.testButton.clicked.connect(self.testConnection)
 
-    def save_settings(self):
+    def saveSettings(self):
         """Save settings"""
 
-        settings.beginGroup('Connection')
-        settings.setValue('PortName', self.ui.portNameComboBox.currentText())
-        settings.setValue('BaudRate', self.ui.baudRateComboBox.currentText())
-        settings.endGroup()
+        self.settings.beginGroup('Connection')
+        self.settings.setValue('PortName', self.ui.portNameComboBox.currentText())
+        self.settings.setValue('BaudRate', self.ui.baudRateComboBox.currentText())
+        self.settings.endGroup()
 
         self.close()
 
-    def load_settings(self):
+    def loadSettings(self):
         """Load previously stored settings"""
 
-        settings.beginGroup('Connection')
-        port_name = settings.value('PortName')
-        baud_rate = settings.value('BaudRate')
-        settings.endGroup()
+        self.settings.beginGroup('Connection')
+        port_name = self.settings.value('PortName')
+        baud_rate = self.settings.value('BaudRate')
+        self.settings.endGroup()
 
         for i in range(self.ui.portNameComboBox.count()):
             if self.ui.portNameComboBox.itemText(i) == port_name:
@@ -53,7 +55,7 @@ class SettingsDialog(QtGui.QDialog):
             if self.ui.baudRateComboBox.itemText(i) == baud_rate:
                 self.ui.baudRateComboBox.setCurrentIndex(i)
 
-    def update_ports(self):
+    def updatePorts(self):
         """Update COM ports list"""
 
         port_name = self.ui.portNameComboBox.currentText()
@@ -65,7 +67,7 @@ class SettingsDialog(QtGui.QDialog):
             if port_name == port[0]:
                 self.ui.portNameComboBox.setCurrentIndex(index)
 
-    def test_connection(self):
+    def testConnection(self):
         """Test connection with defined settings"""
 
         port_name = self.ui.portNameComboBox.currentText()
@@ -76,7 +78,7 @@ class SettingsDialog(QtGui.QDialog):
             baud_rate = 9600    
 
         if not port_name or not baud_rate:
-            QtGui.QMessageBox.warning(self, 'Test Connection', 'Please specify Port Name and Baud Rate')
+            QMessageBox.warning(self, 'Test Connection', 'Please specify Port Name and Baud Rate')
         else:
             connected = False
 
@@ -90,6 +92,6 @@ class SettingsDialog(QtGui.QDialog):
                 pass
 
             if connected:
-                QtGui.QMessageBox.information(self, 'Test Connection', 'Connection ok!')
+                QMessageBox.information(self, 'Test Connection', 'Connection ok!')
             else:
-                QtGui.QMessageBox.information(self, 'Test Connection', 'Connection failed!')
+                QMessageBox.information(self, 'Test Connection', 'Connection failed!')
